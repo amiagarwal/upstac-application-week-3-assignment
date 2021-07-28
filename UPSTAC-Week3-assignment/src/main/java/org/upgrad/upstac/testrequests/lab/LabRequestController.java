@@ -1,13 +1,10 @@
 package org.upgrad.upstac.testrequests.lab;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import org.upgrad.upstac.config.security.UserLoggedInService;
 import org.upgrad.upstac.exception.AppException;
 import org.upgrad.upstac.testrequests.RequestStatus;
@@ -30,9 +27,6 @@ public class LabRequestController {
 
     Logger log = LoggerFactory.getLogger(LabRequestController.class);
 
-
-
-
     @Autowired
     private TestRequestUpdateService testRequestUpdateService;
 
@@ -42,72 +36,43 @@ public class LabRequestController {
     @Autowired
     private TestRequestFlowService testRequestFlowService;
 
-
-
     @Autowired
     private UserLoggedInService userLoggedInService;
 
-
-
+    /** Returns all the test requests with initiated status for the lab testing. */
     @GetMapping("/to-be-tested")
     @PreAuthorize("hasAnyRole('TESTER')")
-    public List<TestRequest> getForTests()  {
-
-
+    public List<TestRequest> getForTests() {
        return testRequestQueryService.findBy(RequestStatus.INITIATED);
-
-
-
-
     }
 
+    /** Returns all the test requests assigned to current logged in tester. */
     @GetMapping
     @PreAuthorize("hasAnyRole('TESTER')")
-    public List<TestRequest> getForTester()  {
-
-        // Implement This Method
-
-        // Create an object of User class and store the current logged in user first
-        //Implement this method to return the list of test requests assigned to current tester(make use of the above created User object)
-        //Make use of the findByTester() method from testRequestQueryService class
-        // For reference check the method getForTests() method from LabRequestController class
-
+    public List<TestRequest> getForTester() {
         User tester = userLoggedInService.getLoggedInUser();
         return testRequestQueryService.findByTester(tester);
-
     }
 
-
+    /** Assigns the test request to the current logged in tester. */
     @PreAuthorize("hasAnyRole('TESTER')")
     @PutMapping("/assign/{id}")
     public TestRequest assignForLabTest(@PathVariable Long id) {
-
-
-
-        User tester =userLoggedInService.getLoggedInUser();
-
-      return   testRequestUpdateService.assignForLabTest(id,tester);
+        User tester = userLoggedInService.getLoggedInUser();
+        return testRequestUpdateService.assignForLabTest(id,tester);
     }
 
+    /** Updates the lab test result for the given test request ID. */
     @PreAuthorize("hasAnyRole('TESTER')")
     @PutMapping("/update/{id}")
-    public TestRequest updateLabTest(@PathVariable Long id,@RequestBody CreateLabResult createLabResult) {
-
+    public TestRequest updateLabTest(@PathVariable Long id, @RequestBody CreateLabResult createLabResult) {
         try {
-
-            User tester=userLoggedInService.getLoggedInUser();
-            return testRequestUpdateService.updateLabTest(id,createLabResult,tester);
-
-
+            User tester = userLoggedInService.getLoggedInUser();
+            return testRequestUpdateService.updateLabTest(id, createLabResult, tester);
         } catch (ConstraintViolationException e) {
             throw asConstraintViolation(e);
-        }catch (AppException e) {
+        } catch (AppException e) {
             throw asBadRequest(e.getMessage());
         }
     }
-
-
-
-
-
 }
